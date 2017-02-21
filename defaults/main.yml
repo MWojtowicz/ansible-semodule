@@ -1,0 +1,7 @@
+---
+# defaults file for MWojtowicz.semodule
+selinux_enable: true
+
+selinux_modules: []
+# - name: xyz
+#   template: xyz.te
