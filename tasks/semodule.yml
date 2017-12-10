@@ -1,19 +1,13 @@
-- name: "SELinux - check if template file exists"
-  local_action: stat path="{{ selinux_module_template|default(selinux_module ~ '.te') }}"
-  register: selinux_template_exists
-
 - name: "SELinux - check if module was loaded"
   command: semodule --list-modules
   register: semodule_loaded
   changed_when: 'selinux_module not in semodule_loaded.stdout'
-  when: selinux_template_exists.stat.islnk is defined
 
 - name: "SELinux - create work directory"
   file:
     path: /var/lib/selinux
     state: directory
     mode: 0700
-  when: selinux_template_exists.stat.islnk is defined
 
 - name: "SELinux - copy type enforcement file"
   template:
@@ -21,7 +15,6 @@
     dest: /var/lib/selinux/{{ selinux_module }}.te
     mode: 0644
   register: semodule_te
-  when: selinux_template_exists.stat.islnk is defined
 
 - name: "SELinux - build and install policy"
   command: "{{ item }}"
@@ -31,4 +24,4 @@
   - "checkmodule -M -m -o {{ selinux_module }}.mod {{ selinux_module }}.te"
   - "semodule_package -o {{ selinux_module }}.pp -m {{ selinux_module }}.mod"
   - "semodule -i {{ selinux_module }}.pp"
-  when: (semodule_loaded|changed or semodule_te|changed or semodule_rebuild|default(False)) and selinux_template_exists.stat.islnk is defined
+  when: (semodule_loaded|changed or semodule_te|changed or semodule_rebuild|default(False))

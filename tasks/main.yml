@@ -1,4 +1,13 @@
 ---
+- name: "Install dependencies for SEModule"
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "@Development tools"
+    - checkpolicy
+    - policycoreutils-python
+
 - name: "Define selinux_enable"
   set_fact:
     selinux_enable: "{{ __selinux_enable }}"
