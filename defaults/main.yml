@@ -1,7 +1,16 @@
 ---
 # defaults file for MWojtowicz.semodule
-selinux_enable: true
+
+# manage selinux state as defined by selinux_state
+manage_selinux_state: True
+
+# disabled, enforcing or permissive
+selinux_state: enforcing
 
 selinux_modules: []
-# - name: xyz
-#   template: xyz.te
+
+## Example:
+# selinux_modules:
+#   - name: xyz
+#     template: xyz.te # optional
+#     rebuild: True # optional, default: False
