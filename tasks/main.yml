@@ -1,47 +1,35 @@
 ---
 - name: "Install dependencies for SEModule"
-  package:
-    name: "{{ item }}"
+  yum:
+    name:
+      - checkpolicy
+      - policycoreutils-python
+      - policycoreutils
+      - libselinux-python
     state: present
-  with_items:
-    - "@Development tools"
-    - checkpolicy
-    - policycoreutils-python
 
-- name: "Define selinux_enable"
-  set_fact:
-    selinux_enable: "{{ __selinux_enable }}"
-  when: selinux_enable is not defined
+- name: Enable selinux
+  selinux:
+    policy: targeted
+    state: '{{ selinux_state }}'
+  when:
+    - manage_selinux_state
+    - not selinux_state == 'disabled'
 
-- name: "Disable SELinux"
-  lineinfile:
-    dest: "{{item}}"
-    regexp: "^SELINUX="
-    line: "SELINUX=disabled"
-    state: present
-  with_items:
-    - "/etc/selinux/config"
-  when: not selinux_enable
+- name: Disable SELinux
+  selinux:
+    state: disabled
+  when:
+    - manage_selinux_state
+    - selinux_state == 'disabled'
 
-- name: "Check getenforce"
-  command: getenforce
-  changed_when: '"Disabled" not in selinux_getenforce.stdout'
-  register: selinux_getenforce
-
-- name: "Disable SELinux"
-  shell: setenforce 0
-  when: not selinux_enable and selinux_getenforce|changed
-
-- name: "Define selinux_modules"
-  set_fact:
-    selinux_modules: "{{ __selinux_modules | list }}"
-  when: selinux_enable and selinux_modules is not defined
-
-- include: semodule.yml
+- include_tasks: semodule.yml
   vars:
-    selinux_module: "{{ outer_item.name }}"
-    selinux_module_template: "{{ outer_item.template|default(outer_item.name ~ '.te') }}"
+    selinux_module: "{{ semodule_item.name }}"
+    selinux_module_template: "{{ semodule_item.template|default(semodule_item.name ~ '.te') }}"
+    semodule_rebuild: "{{ semodule_item.rebuild | default(False) }}"
   with_items: "{{ selinux_modules }}"
   loop_control:
-    loop_var: outer_item
-  when: selinux_enable
+    loop_var: semodule_item
+  when:
+    - not selinux_state == 'disabled'
