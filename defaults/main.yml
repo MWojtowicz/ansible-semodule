@@ -5,3 +5,5 @@ selinux_enable: true
 selinux_modules: []
 # - name: xyz
 #   template: xyz.te
+
+selinux_workdir: "/var/lib/selinux"
