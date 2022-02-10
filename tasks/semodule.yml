@@ -5,21 +5,21 @@
 
 - name: "SELinux - create work directory"
   file:
-    path: /var/lib/selinux
+    path: "{{ selinux_workdir }}"
     state: directory
     mode: 0700
 
 - name: "SELinux - copy type enforcement file"
   template:
     src: "{{ selinux_module_template|default(selinux_module ~ '.te') }}"
-    dest: /var/lib/selinux/{{ selinux_module }}.te
+    dest: "{{ selinux_workdir }}/{{ selinux_module }}.te"
     mode: 0644
   register: semodule_te
 
 - name: "SELinux - build and install policy"
   command: "{{ item }}"
   args:
-    chdir: /var/lib/selinux
+    chdir: "{{ selinux_workdir }}"
   with_items:
   - "checkmodule -M -m -o {{ selinux_module }}.mod {{ selinux_module }}.te"
   - "semodule_package -o {{ selinux_module }}.pp -m {{ selinux_module }}.mod"
